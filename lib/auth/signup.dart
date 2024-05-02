@@ -17,7 +17,7 @@ class _SignupState extends State<Signup> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   TextEditingController username = TextEditingController();
-
+  GlobalKey<FormState> formState = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,6 +25,7 @@ class _SignupState extends State<Signup> {
         padding: const EdgeInsets.all(20),
         child: ListView(children: [
           Form(
+            key: formState,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -54,9 +55,13 @@ class _SignupState extends State<Signup> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 CustomTextForm(
-                  hinttext: "Enter Your Username",
-                  mycontroller: username,
-                ),
+                    hinttext: "Enter Your Username",
+                    mycontroller: username,
+                    validator: (val) {
+                      if (val == "") {
+                        return ("Can't be empty");
+                      }
+                    }),
                 Container(
                   height: 20,
                 ),
@@ -65,9 +70,13 @@ class _SignupState extends State<Signup> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 CustomTextForm(
-                  hinttext: "Enter Your Email",
-                  mycontroller: email,
-                ),
+                    hinttext: "Enter Your Email",
+                    mycontroller: email,
+                    validator: (val) {
+                      if (val == "") {
+                        return ("Can't be empty");
+                      }
+                    }),
                 Container(
                   height: 20,
                 ),
@@ -76,9 +85,13 @@ class _SignupState extends State<Signup> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 CustomTextForm(
-                  hinttext: "Enter Your Password",
-                  mycontroller: password,
-                ),
+                    hinttext: "Enter Your Password",
+                    mycontroller: password,
+                    validator: (val) {
+                      if (val == "") {
+                        return ("Can't be empty");
+                      }
+                    }),
                 Container(
                   margin: const EdgeInsets.only(top: 10, bottom: 20),
                   alignment: Alignment.topRight,
@@ -99,7 +112,8 @@ class _SignupState extends State<Signup> {
                     email: email.text,
                     password: password.text,
                   );
-                  Navigator.of(context).pushReplacementNamed("homepage");
+                  FirebaseAuth.instance.currentUser!.sendEmailVerification();
+                  Navigator.of(context).pushReplacementNamed("login");
                 } on FirebaseAuthException catch (e) {
                   if (e.code == 'weak-password') {
                     showDialog(

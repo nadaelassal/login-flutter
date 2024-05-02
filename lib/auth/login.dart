@@ -2,6 +2,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:login_app/components/custombutton.dart';
 import 'package:login_app/components/customlogo.dart';
 import '../components/textformfeild.dart';
@@ -15,6 +16,26 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   GlobalKey<FormState> formState = GlobalKey<FormState>();
+
+  Future signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    await FirebaseAuth.instance.signInWithCredential(credential);
+    Navigator.of(context).pushNamedAndRemoveUntil("homepage", (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     TextEditingController email = TextEditingController();
@@ -25,6 +46,7 @@ class _LoginState extends State<Login> {
         padding: const EdgeInsets.all(20),
         child: ListView(children: [
           Form(
+            key: formState,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -54,9 +76,13 @@ class _LoginState extends State<Login> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 CustomTextForm(
-                  hinttext: "Enter Your Email",
-                  mycontroller: email,
-                ),
+                    hinttext: "Enter Your Email",
+                    mycontroller: email,
+                    validator: (val) {
+                      if (val == "") {
+                        return ("Can't be empty");
+                      }
+                    }),
                 Container(
                   height: 20,
                 ),
@@ -65,9 +91,13 @@ class _LoginState extends State<Login> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 CustomTextForm(
-                  hinttext: "Enter Your Password",
-                  mycontroller: password,
-                ),
+                    hinttext: "Enter Your Password",
+                    mycontroller: password,
+                    validator: (val) {
+                      if (val == "") {
+                        return ("Can't be empty");
+                      }
+                    }),
                 Container(
                   margin: const EdgeInsets.only(top: 10, bottom: 20),
                   alignment: Alignment.topRight,
@@ -87,7 +117,24 @@ class _LoginState extends State<Login> {
                   final credential = await FirebaseAuth.instance
                       .signInWithEmailAndPassword(
                           email: email.text, password: password.text);
-                  Navigator.of(context).pushReplacementNamed("homepage");
+                  if (credential.user!.emailVerified) {
+                    Navigator.of(context).pushReplacementNamed("homepage");
+                  } else {
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              actions: [
+                                TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text("Close"))
+                              ],
+                              content: Text(
+                                  "Please go to your email to be verified"),
+                              title: Text("Alert"),
+                            ));
+                  }
                 } on FirebaseAuthException catch (e) {
                   if (e.code == 'user-not-found') {
                     showDialog(
@@ -134,7 +181,9 @@ class _LoginState extends State<Login> {
             height: 50,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-            onPressed: () {},
+            onPressed: () {
+              signInWithGoogle();
+            },
             child: const Text(
               "Login with Google",
             ),

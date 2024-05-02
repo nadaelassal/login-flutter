@@ -28,6 +28,18 @@ class _HomepageState extends State<Homepage> {
           style: TextStyle(color: Colors.white),
         ),
       ),
+      body: ListView(
+        children: [
+          FirebaseAuth.instance.currentUser!.emailVerified
+              ? Text("Welcom")
+              : MaterialButton(
+                  onPressed: () {
+                    FirebaseAuth.instance.currentUser!.sendEmailVerification();
+                  },
+                  child: Text("please verify your email"),
+                )
+        ],
+      ),
     );
   }
 }
