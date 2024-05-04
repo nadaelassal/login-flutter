@@ -16,10 +16,14 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   GlobalKey<FormState> formState = GlobalKey<FormState>();
-
   Future signInWithGoogle() async {
     // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    final GoogleSignInAccount? googleUser =
+        await GoogleSignIn(scopes: ['profile', ' email']).signIn();
+
+    if (googleUser == null) {
+      return;
+    }
 
     // Obtain the auth details from the request
     final GoogleSignInAuthentication? googleAuth =
@@ -98,12 +102,65 @@ class _LoginState extends State<Login> {
                         return ("Can't be empty");
                       }
                     }),
-                Container(
-                  margin: const EdgeInsets.only(top: 10, bottom: 20),
-                  alignment: Alignment.topRight,
-                  child: const Text(
-                    "Forget password ?",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                InkWell(
+                  onTap: () async {
+                    if (email.text == "") {
+                      showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                actions: [
+                                  TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text("Close"))
+                                ],
+                                content: Text("Please enter your email"),
+                                title: Text("Alert"),
+                              ));
+                      return;
+                    }
+
+                    try {
+                      await FirebaseAuth.instance
+                          .sendPasswordResetEmail(email: email.text);
+                      showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                actions: [
+                                  TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text("Close"))
+                                ],
+                                content: Text(
+                                    "Please go to your email to reset password"),
+                                title: Text("Alert"),
+                              ));
+                    } catch (e) {
+                      showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                actions: [
+                                  TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text("Close"))
+                                ],
+                                content: Text("User not found"),
+                                title: Text("Alert"),
+                              ));
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10, bottom: 20),
+                    alignment: Alignment.topRight,
+                    child: const Text(
+                      "Forget password ?",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
                   ),
                 ),
               ],
