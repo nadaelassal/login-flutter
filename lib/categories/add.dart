@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:login_app/components/custombutton.dart';
 import 'package:login_app/components/customtextformfeildadd.dart';
@@ -10,12 +11,25 @@ class AddCatigory extends StatefulWidget {
 }
 
 class _AddCatigoryState extends State<AddCatigory> {
-  GlobalKey<FormState> formstate = GlobalKey<FormState>();
+  GlobalKey<FormState> formState = GlobalKey<FormState>();
+
   TextEditingController name = TextEditingController();
+  CollectionReference categories =
+      FirebaseFirestore.instance.collection('categories');
+
+  addUser() async {
+    try {
+      DocumentReference response = await categories.add({"name": name.text});
+      Navigator.of(context).pushReplacementNamed("homepage");
+    } catch (e) {
+      print("Error $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: formstate,
+        key: formState,
         appBar: AppBar(
           title: Text("Add Category"),
         ),
@@ -35,7 +49,9 @@ class _AddCatigoryState extends State<AddCatigory> {
             ),
             CustomButton(
               title: "Add",
-              onPressed: () {},
+              onPressed: () {
+                addUser();
+              },
             ),
           ],
         )));
