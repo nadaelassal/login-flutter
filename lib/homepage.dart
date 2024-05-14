@@ -12,11 +12,14 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   List<QueryDocumentSnapshot> data = [];
-
+  bool isLoading = true;
   getData() async {
-    QuerySnapshot querySnapshot =
-        await FirebaseFirestore.instance.collection("categories").get();
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection("categories")
+        .where("id", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .get();
     data.addAll(querySnapshot.docs);
+    isLoading = false;
     setState(() {});
   }
 
@@ -52,27 +55,59 @@ class _HomepageState extends State<Homepage> {
           "Home Page",
         ),
       ),
-      body: GridView.builder(
-        itemCount: data.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2, mainAxisExtent: 200),
-        itemBuilder: (context, i) {
-          return Card(
-            child: Container(
-              padding: EdgeInsets.all(10),
-              child: Column(
-                children: [
-                  Image.network(
-                    "https://freepngimg.com/thumb/folder/36792-3-folders-file.png",
-                    height: 130,
+      body: isLoading == true
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : GridView.builder(
+              itemCount: data.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, mainAxisExtent: 200),
+              itemBuilder: (context, i) {
+                return InkWell(
+                  onLongPress: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              actions: [
+                                TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text("Cancle")),
+                                TextButton(
+                                    onPressed: () async {
+                                      await FirebaseFirestore.instance
+                                          .collection("categories")
+                                          .doc(data[i].id)
+                                          .delete();
+                                      Navigator.of(context)
+                                          .pushReplacementNamed("homepage");
+                                    },
+                                    child: Text("Ok"))
+                              ],
+                              content:
+                                  Text("Are you sure you want to delete ?"),
+                              title: Text("Alert"),
+                            ));
+                  },
+                  child: Card(
+                    child: Container(
+                      padding: EdgeInsets.all(10),
+                      child: Column(
+                        children: [
+                          Image.network(
+                            "https://freepngimg.com/thumb/folder/36792-3-folders-file.png",
+                            height: 130,
+                          ),
+                          Text("${data[i]['name']}"),
+                        ],
+                      ),
+                    ),
                   ),
-                  Text("${data[i]['name']}"),
-                ],
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

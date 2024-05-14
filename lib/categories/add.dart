@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:login_app/components/custombutton.dart';
 import 'package:login_app/components/customtextformfeildadd.dart';
@@ -11,7 +12,7 @@ class AddCatigory extends StatefulWidget {
 }
 
 class _AddCatigoryState extends State<AddCatigory> {
-  GlobalKey<FormState> formState = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
   TextEditingController name = TextEditingController();
   CollectionReference categories =
@@ -19,7 +20,8 @@ class _AddCatigoryState extends State<AddCatigory> {
 
   addUser() async {
     try {
-      DocumentReference response = await categories.add({"name": name.text});
+      DocumentReference response = await categories.add(
+          {"name": name.text, "id": FirebaseAuth.instance.currentUser!.uid});
       Navigator.of(context).pushReplacementNamed("homepage");
     } catch (e) {
       print("Error $e");
@@ -29,7 +31,7 @@ class _AddCatigoryState extends State<AddCatigory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: formState,
+        key: _formKey,
         appBar: AppBar(
           title: Text("Add Category"),
         ),
@@ -48,11 +50,10 @@ class _AddCatigoryState extends State<AddCatigory> {
                   }),
             ),
             CustomButton(
-              title: "Add",
-              onPressed: () {
-                addUser();
-              },
-            ),
+                title: "Add",
+                onPressed: () {
+                  addUser();
+                }),
           ],
         )));
   }
